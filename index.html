@@ -1,449 +1,147 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0f172a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TEDAŞ Topraklamalar - Sadece Kitap Modu (v5.0)</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  body { background: #0f172a; color: #f8fafc; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-  header { background: #1e293b; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
-  .logo { font-weight: 700; font-size: 16px; color: #facc15; display: flex; align-items: center; gap: 6px; }
-  .header-btns { display: flex; gap: 8px; }
-  button { border: none; border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.2s; }
-  button:active { opacity: 0.8; }
-  .btn-audio { background: #2563eb; color: white; }
-  .btn-audio.muted { background: #475569; color: #cbd5e1; }
-  .btn-api { background: #334155; color: #f8fafc; border: 1px solid #475569; }
-  
-  .status-bar { text-align: center; padding: 8px; }
-  .status-pill { display: inline-block; background: #1e293b; border: 1px solid #334155; padding: 5px 14px; border-radius: 20px; font-size: 12px; color: #e2e8f0; }
-
-  .camera-container { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; padding: 12px; overflow: hidden; }
-  video { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; background: #000; }
-  .guide-box { position: absolute; width: 88%; height: 55%; border: 2px dashed #38bdf8; border-radius: 14px; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45); }
-  .guide-label { background: rgba(15, 23, 42, 0.85); color: #f8fafc; padding: 4px 12px; border-radius: 12px; font-size: 12px; }
-
-  .controls { padding: 10px 14px; display: flex; gap: 8px; background: #0f172a; }
-  .btn-scan { flex: 1.2; background: #16a34a; color: white; padding: 14px; font-size: 15px; border-radius: 12px; }
-  .btn-scan.active { background: #dc2626; }
-  .btn-now { flex: 1.2; background: #2563eb; color: white; padding: 14px; font-size: 15px; border-radius: 12px; }
-  .btn-flip { background: #334155; color: white; padding: 14px; border-radius: 12px; }
-
-  .output-box { background: #1e293b; margin: 0 14px 14px 14px; padding: 12px; border-radius: 12px; border: 1px solid #334155; min-height: 95px; max-height: 150px; overflow-y: auto; font-size: 14px; line-height: 1.45; color: #f1f5f9; }
-  .output-box.error { border-color: #ef4444; background: rgba(127, 29, 29, 0.35); color: #fca5a5; }
-
-  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 50; align-items: center; justify-content: center; padding: 16px; }
-  .modal.open { display: flex; }
-  .modal-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 18px; width: 100%; max-width: 400px; }
-  .modal-card h3 { margin-bottom: 12px; font-size: 16px; color: #facc15; }
-  .field { margin-bottom: 12px; }
-  .field label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
-  .field input, .field select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 14px; }
-  .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
-  .modal-actions button { flex: 1; padding: 10px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>TEDAŞ Topraklamalar - Canlı Kamera & Sesli Asistan</title>
+  <link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;TEDAŞ Topraklamalar&quot;,&quot;short_name&quot;:&quot;TEDAŞ Kamera&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%230f172a&quot;,&quot;theme_color&quot;:&quot;%230f172a&quot;}">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #1e293b; border-bottom: 1px solid #334155; }
+    .title { font-size: 16px; font-weight: 700; color: #facc15; display: flex; align-items: center; gap: 6px; }
+    .header-btns { display: flex; gap: 8px; }
+    button { border: none; border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-top { background: #334155; color: #fff; }
+    .btn-top.active { background: #0284c7; }
+    .status-bar { text-align: center; padding: 6px; font-size: 12px; background: #1e293b; color: #94a3b8; border-bottom: 1px solid #334155; }
+    .camera-wrapper { position: relative; flex: 1; background: #000; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+    video { width: 100%; height: 100%; object-fit: cover; }
+    .scan-frame { position: absolute; width: 88%; height: 46%; border: 2px dashed #38bdf8; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.55); pointer-events: none; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 10px; }
+    .scan-hint { background: rgba(15, 23, 42, 0.85); color: #e2e8f0; font-size: 12px; padding: 4px 12px; border-radius: 20px; }
+    .controls { display: flex; gap: 8px; padding: 12px 16px; background: #1e293b; border-top: 1px solid #334155; }
+    .btn-auto { flex: 1.2; background: #16a34a; color: #fff; font-size: 14px; padding: 12px; }
+    .btn-auto.stop { background: #dc2626; }
+    .btn-now { flex: 1.2; background: #2563eb; color: #fff; font-size: 14px; padding: 12px; }
+    .btn-flip { background: #334155; color: #fff; padding: 12px 14px; font-size: 16px; }
+    .output-box { background: #1e293b; padding: 12px 16px; min-height: 110px; max-height: 155px; overflow-y: auto; border-top: 1px solid #334155; font-size: 14px; line-height: 1.45; color: #e2e8f0; }
+    .output-box.error { background: #450a0a; color: #fca5a5; border-top-color: #991b1b; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 50; justify-content: center; align-items: center; padding: 20px; }
+    .modal.open { display: flex; }
+    .modal-card { background: #1e293b; padding: 20px; border-radius: 14px; width: 100%; max-width: 400px; border: 1px solid #334155; }
+    .modal-card h3 { margin-bottom: 14px; color: #facc15; font-size: 16px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 14px; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .modal-actions button { flex: 1; padding: 10px; }
+    .btn-save { background: #16a34a; color: #fff; }
+    .btn-close { background: #475569; color: #fff; }
+    canvas { display: none; }
+  </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">⚡ TEDAŞ Topraklamalar</div>
+  <div class="title">⚡ TEDAŞ Topraklamalar</div>
   <div class="header-btns">
-    <button id="audioBtn" class="btn-audio" onclick="toggleAudio()">🔊 Ses Açık</button>
-    <button class="btn-api" onclick="openSettings()">⚙ API</button>
+    <button id="btnSound" class="btn-top active">🔊 Ses Açık</button>
+    <button id="btnSettings" class="btn-top">⚙ API</button>
   </div>
 </header>
 
-<div class="status-bar">
-  <span id="statusPill" class="status-pill">Kamera Hazır (v5.0 - Sadece Kitap S.256-272)</span>
-</div>
+<div id="statusBar" class="status-bar">Kamera Hazır (v6.1 - Sadece Kitap S.256-272)</div>
 
-<div class="camera-container">
+<div class="camera-wrapper">
   <video id="video" autoplay playsinline muted></video>
-  <div class="guide-box">
-    <span class="guide-label">Soruyu çerçeveye ortalayın</span>
+  <div class="scan-frame">
+    <span class="scan-hint">Soruyu çerçeveye ortalayın</span>
   </div>
 </div>
 
 <div class="controls">
-  <button id="scanBtn" class="btn-scan" onclick="toggleAutoScan()">▶ Canlı Taramayı Başlat</button>
-  <button class="btn-now" onclick="captureAndAnalyze()">⚡ Şimdi Oku</button>
-  <button class="btn-flip" onclick="switchCamera()">🔄</button>
+  <button id="btnAuto" class="btn-auto">▶ Canlı Taramayı Başlat</button>
+  <button id="btnNow" class="btn-now">⚡ Şimdi Oku</button>
+  <button id="btnFlip" class="btn-flip">🔄</button>
 </div>
 
 <div id="outputBox" class="output-box">
-  Sadece TEDAŞ Topraklamalar (Sayfa 256–272) kitap fotoğraflarındaki bilgilere göre cevap verir. Soruyu çerçeveye tutup "Şimdi Oku" butonuna basın.
+  TEDAŞ Topraklamalar (v6.1 - Sadece Kitap S. 256–272) yüklendi. Soruyu çerçeveye ortalayıp "Şimdi Oku" butonuna basın.
 </div>
+
+<canvas id="canvas"></canvas>
 
 <div id="settingsModal" class="modal">
   <div class="modal-card">
-    <h3>⚙ Uygulama ve API Ayarları</h3>
-    <div class="field">
+    <h3>⚙ API ve Asistan Ayarları</h3>
+    <div class="form-group">
       <label>Gemini API Anahtarı (AIzaSy...)</label>
       <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
     </div>
-    <div class="field">
+    <div class="form-group">
       <label>Otomatik Tarama Aralığı (Saniye)</label>
-      <select id="intervalSelect">
+      <select id="intervalInput">
         <option value="5000">5 Saniye</option>
         <option value="8000" selected>8 Saniye</option>
         <option value="12000">12 Saniye</option>
       </select>
     </div>
-    <div class="field">
-      <label>Sesli Okuma Hızı</label>
-      <select id="rateSelect">
-        <option value="0.95">Normal (0.95x)</option>
-        <option value="1.1" selected>Hızlı (1.1x)</option>
-        <option value="1.25">Çok Hızlı (1.25x)</option>
+    <div class="form-group">
+      <label>Konuşma Hızı</label>
+      <select id="rateInput">
+        <option value="0.9">Yavaş (0.9x)</option>
+        <option value="1.0" selected>Normal (1.0x)</option>
+        <option value="1.2">Hızlı (1.2x)</option>
       </select>
     </div>
     <div class="modal-actions">
-      <button style="background:#475569;color:white;" onclick="closeSettings()">İptal</button>
-      <button style="background:#16a34a;color:white;" onclick="saveSettings()">Kaydet</button>
+      <button id="btnSaveSettings" class="btn-save">Kaydet</button>
+      <button id="btnCloseSettings" class="btn-close">Kapat</button>
     </div>
   </div>
 </div>
 
-<canvas id="canvas" style="display:none;"></canvas>
-
 <script>
 const KITAP_BILGI_BANKASI = `
-KAYNAK: TÜRKİYE ELEKTRİK DAĞITIM ANONİM ŞİRKETİ (TEDAŞ) - TOPRAKLAMALAR (SAYFA 256 - 272)
+KAYNAK: TEDAŞ TOPRAKLAMALAR KİTABI (SAYFA 256 - 272)
 
-[SAYFA 256 - TOPRAKLAMALAR VE ELEMANLARI]
+[SAYFA 256 - TOPRAKLAMA TANIMI, AMAÇLARI VE ELEMANLARI]
 - Tanım: Tesislerin gerilim altında olmayan kısımlarının ve bazı teçhizatın yıldız noktasının uygun iletkenlerle yer kütle içerisine yerleştirilmiş bir topraklayıcıya bağlanmasına topraklama denir. Elektrik üretim, iletim ve dağıtım tesislerinde insan hayatının ve teçhizatın korunmasını sağlar.
-- İki Ana Amaç:
-  1) Topraklanacak cihaz veya bölüm ile referans toprak arasındaki direncin olabildiğince küçük olmasını sağlamak; oluşabilecek hata akımını mümkün olduğunca büyütmek.
-  2) İşletme esnasında; cihazların, bina aksamının ve benzeri elemanların arasında oluşabilecek potansiyel farkı engellemek.
-- 12.1.1. Topraklayıcılar:
-  * 2 m boyunda NPL 65 x 65 x 7 mm galvanizli çelik profil
-  * 2 m boyunda; 3 mm et kalınlığında, 2,5 parmak (6,35 cm) çapında galvanizli boru
-  * 2,5 m boyunda; 3 mm bakır kaplı, 22 mm çapında çelik çubuk
-  * 0,5 x 1 m ebatında 3 mm et kalınlığında galvanizli çelik levha
-- 12.1.2. Topraklama İletkenleri:
-  * 1x50 mm2'lik NYY kablo (Kullanılan transformatör güçlerine bağlı olarak kesiti artırılır) (İşletme topraklamasında)
-  * 35 mm2 kesitinde çıplak örgülü bakır iletken (saha dağıtım kutusu ve aydınlatma tesislerindeki koruma topraklamasında)
-  * 95 mm2 galvanizli örgülü çelik iletken (ENH koruma topraklamasında ve parafudr topraklamalarında)
-  * 35x3 mm 100 mm2 boyutunda galvanizli çelik şerit (koruma topraklamaları)
-  * 95 mm2 kesitinde çıplak örgülü bakır iletken (dağıtım ve transformatör merkezlerinde koruma topraklamasında)
+- İki Ana Amaç: 1) Topraklanacak cihaz/bölüm ile referans toprak arasındaki direncin olabildiğince küçük olmasını sağlamak; oluşabilecek hata akımını mümkün olduğunca büyütmek. 2) İşletme esnasında cihazların, bina aksamının ve benzeri elemanların arasında oluşabilecek potansiyel farkı engellemek.
+- Topraklayıcılar:
+  * 2 m boyunda NPL 65x65x7 mm galvanizli çelik profil
+  * 2 m boyunda, 3 mm et kalınlığında, 2,5 parmak (6,35 cm) çapında galvanizli boru
+  * 2,5 m boyunda, 3 mm bakır kaplı, 22 mm çapında çelik çubuk
+  * 0,5 x 1 m ebatında, 3 mm et kalınlığında galvanizli çelik levha
+- Topraklama İletkenleri:
+  * 1x50 mm² NYY kablo (Trafo güçlerine göre kesiti artırılır - İşletme topraklamasında)
+  * 35 mm² kesitinde çıplak örgülü bakır iletken (SDK ve aydınlatma tesislerindeki koruma topraklamasında)
+  * 95 mm² galvanizli örgülü çelik iletken (ENH koruma topraklamasında ve parafudr topraklamalarında)
+  * 35x3 mm (100 mm²) boyutunda galvanizli çelik şerit (Koruma topraklamaları)
+  * 95 mm² kesitinde çıplak örgülü bakır iletken (Dağıtım ve transformatör merkezlerinde koruma topraklamasında)
 
-[SAYFA 257 - TOPRAKLAMA SINIFLANDIRMA TABLOSU]
-- Çeşitlerine Göre Topraklama:
-  1) Dolaysız Topraklama: Topraklama direncinden başka hiçbir direnç içermeyen topraklamadır.
-  2) Dolaylı Topraklama: Topraklama iletkeni üzerine ek olarak bağlanan omik, endüktif veya kapasitif dirençlerle yapılan topraklamadır.
-  3) Açık Topraklama: Topraklama iletkeni üzerine bir parafudr veya eklatör bağlanan topraklamadır.
-- Amaçlarına Göre Topraklama:
-  1) Koruma Topraklaması
-  2) İşletme Topraklaması
-  3) Fonksiyonel Topraklama
-- Şekillerine Göre Topraklama:
-  1) Münferit Topraklama: İşletme elemanı veya cihazın kendine ait topraklayıcıya bağlı olduğu topraklamadır.
-  2) Yıldız Topraklama: Topraklama iletkenlerinin, topraklanmış bir noktada, yıldız şeklinde toplanmasıdır.
-  3) Çoklu Topraklama: Bir işletme elemanı veya cihazın topraklanmış birçok iletkene bağlandığı topraklamadır.
-  4) Yüzeysel Topraklama: Akım taşımayan iletken kısımların ağ şeklinde kendi aralarında koruma veya fonksiyon topraklamasına bağlandığı topraklamadır.
+[SAYFA 257 - TOPRAKLAMA SINIFLANDIRMASI]
+1) Çeşitlerine Göre Topraklama:
+   - Dolaysız Topraklama: Topraklama direncinden başka hiçbir direnç içermeyen topraklamadır.
+   - Dolaylı Topraklama: Topraklama iletkeni üzerine ek olarak bağlanan omik, endüktif veya kapasitif dirençlerle yapılan topraklamadır.
+   - Açık Topraklama: Topraklama iletkeni üzerine bir parafudr veya eklatör bağlanan topraklamadır.
+2) Amaçlarına Göre Topraklama:
+   - Koruma Topraklaması
+   - İşletme Topraklaması
+   - Fonksiyonel Topraklama
+3) Şekillerine Göre Topraklama:
+   - Münferit Topraklama: İşletme elemanı veya cihazın kendine ait topraklayıcıya bağlı olduğu topraklamadır.
+   - Yıldız Topraklama: Topraklama iletkenlerinin topraklanmış bir noktada yıldız şeklinde toplanmasıdır.
+   - Çoklu Topraklama: Bir işletme elemanı veya cihazın topraklanmış birçok iletkene bağlandığı topraklamadır.
+   - Yüzeysel Topraklama: Akım taşımayan iletken kısımların ağ şeklinde kendi aralarında koruma veya fonksiyon topraklamasına bağlandığı topraklamadır.
 
-[SAYFA 258 - TOPRAKLAMANIN AMAÇLARINA GÖRE ÇEŞİTLERİ]
-- 12.2.1. Koruma Topraklaması: Uygun işletme şartları içerisinde, gerilim altında bulunmayan; ancak arıza oluştuğunda gerilim altındaRecoveryabilecek metal bölümlerin bir iletken yolu ile topraklayıcıya bağlanmasıdır. Hata halinde insan vücudu üzerinden geçebilecek akımı oldukça az tutmak ve devredeki koruma cihazlarının çalışmasını sağlayarak arızalı kısmın hızla devre dışı olmasını amaçlar.
-  Uygulama alanları: AG Direkleri, Müşterek Direkler ve ENH Direklerinde koruma topraklaması; Direk Tipi Transformatörlerde Koruma ve Parafudr Topraklaması; Saha Dağıtım Kutusu (SDK) ve Aydınlatma Direklerinin Koruma Topraklaması; Müşterek Direklerde Koruma Topraklaması; Kırsal Kesim Enerji Nakil Hattı ve Dağıtım Hatlarında Koruma Topraklaması; Transformatör ve Kök Binalarında Koruma ve Parafudr Topraklaması; İndirici ve Dağıtım Merkezlerinde Topraklama; Yüksek Gerilim Yer altı Kablo Tesislerinde Topraklama; Elektrik motorları, jeneratörler, transformatörler, enerji nakil hattı direk ve traverslerinin metal kısımlarının topraklanması; Binaların iletken olan ve ulaşılabilen kısımlarının topraklanması; Ölçü transformatörlerinde sekonder sargıların polarite olmayan uçlarının topraklanması; YG havai hatların koruma tellerinin topraklanması; AG ve YG kumanda panosu metal aksamlarının topraklanması.
-- 12.2.2. İşletme Topraklaması: Transformatörlerin veya jeneratörlerin dışarı çıkartılmış yıldız (nötr) noktalarında toprağa karşı oluşacak gerilimin sınırlandırılması için yapılan topraklamadır.
-  Uygulama alanları: Direk Tip Transformatörlerde İşletme Topraklaması; Alçak Gerilim Direklerinde İşletme Topraklaması; Saha Dağıtım Kutusu (SDK) ve Aydınlatma Direklerinin İşletme Topraklaması; Müşterek Direklerde İşletme Topraklaması; Transformatör ve Kök Binalarında İşletme Topraklaması.
+[SAYFA 258-259 - AMAÇLARINA GÖRE DETAYLAR VE MAHALLİ TOPRAKLAMA]
+- Koruma Topraklaması: Uygun işletme şartları içerisinde gerilim altında bulunmayan ancak arıza oluştuğunda gerilim altında olabilecek metal bölümlerin bir iletken yolu ile topraklayıcıya bağlanmasıdır. Amaç: İnsan vücudu üzerinden geçebilecek akımı az tutmak ve koruma cihazlarının çalışmasını sağlayarak arızalı kısmın hızla devre dışı olmasını sağlamaktır.
+- İşletme Topraklaması: Transformatörlerin veya jeneratörlerin dışarı çıkartılmış yıldız (nötr) noktalarında toprağa karşı oluşacak gerilimin sınırlandırılması için yapılan topraklamadır (Direk tip trafolar, AG direkleri, SDK ve aydınlatma direkleri, müşterek direkler, TR ve KÖK binaları).
+- Fonksiyonel (Özel) Topraklama: Tesisin veya işletme elemanının istenen fonksiyonu yerine getirmesi amacıyla yapılan topraklamadır (Paratoner, raylı sistem, zayıf akım topraklaması vb.).
+- Mahalli Topraklama: Çalışma mahallinin en yakın yerinde yapılan topraklamalardır. Arıza ve bakım hallerinde enerjisi kesilmiş tesislerde güvenli çalışmayı sağlamak amacıyla yapılır (Kısa devre topraklama aparatları ile toprağa irtibatlanır).
 
-[SAYFA 259 - FONKSİYONEL VE MAHALLİ TOPRAKLAMA]
-- 12.2.3. Fonksiyonel (Özel) Topraklama: Tesisin veya işletme elemanının istenen fonksiyonunu yerine getirmesi amacıyla yapılan topraklamadır. Koruma ve işletme topraklamalarının dışında yapılan mahalli topraklama, paratoner topraklama, raylı sistem topraklama, zayıf akım topraklama vb. yapılan topraklamalar fonksiyonel topraklama çeşitleridir. Bunlar içerisinde mahalli topraklama iş güvenliği açısından önem arz etmektedir.
-- 12.2.4. Mahalli Topraklama: Çalışma mahallinin en yakın yerinde yapılan topraklamalardır. Arıza ve bakım hallerinde enerjisi kesilmiş tesislerde, güvenli çalışmayı sağlamak amacıyla yapılır. Enerjisi kesilmiş çalışma mahallindeki tesisin enerji taşıyan kısımlarının uygun kısa devre topraklama aparatları ile çalışma süresince toprağa irtibatlanmasıdır.
-
-[SAYFA 260 - 261 - DAĞITIM ŞEBEKELERİNİN TOPRAKLAMA TİPİNE GÖRE SINIFLANDIRILMASI]
-- 3'e ayrılır: TT Sistemi, IT Sistemi, TN Sistemi.
-- Harf Anlamları:
-  * Birinci harf (Güç sisteminin toprağa bağlantısı): T = Bir noktanın toprağa doğrudan bağlantısı; I = Bütün gerilimli bölümlerin topraktan ayrılmış olması veya bir noktadan empedans üzerinden toprağa bağlantısı.
-  * İkinci harf (Tesisatın açıktaki iletken bölümleri): T = Açıktaki iletken bölümlerin doğrudan toprağa bağlantısı; N = Güç sisteminin topraklanmış noktasına (nötr) elektriksel olarak doğrudan bağlantı.
-  * Sonraki harf (Nötr ve koruma iletkeni düzeni): S = Ayrı bir iletkenle koruma fonksiyonu; C = Tek iletken üzerinden birleştirilerek (PEN iletkeni).
-- TT Sistemleri: Doğrudan topraklanmış bir nokta bulunur. Tesisatın açıktaki iletken bölümleri, güç sistemi topraklayıcısından elektriksel olarak bağımsız olan topraklayıcıya bağlanır. Alçak Gerilim Tesislerinde Topraklama olarak adlandırılır.
-- IT Sistemi: Bütün gerilimli bölümler topraktan ayrılır veya bir noktadan empedans üzerinden toprağa bağlanır. Açıktaki iletken bölümler ayrı ayrı veya birleşik olarak topraklanır.
-- TN Sistemleri (3 tipe ayrılır):
-  1) TN-S sistemi: Sistemin tamamında ayrı bir koruma iletkeni (PE) kullanılır (nötr ile koruma ayrı).
-  2) TN-C sistemi: Sistemin tamamında nötr ve koruma fonksiyonları tek iletkende (PEN) birleştirilmiştir.
-  3) TN-C-S sistemi: Nötr ve koruma fonksiyonları, sistemin bir bölümünde tek iletkende (PEN) birleştirilmiştir (sonra PE ve N olarak ayrılır).
-
-[SAYFA 262 - 268 - DAĞITIM ŞEBEKELERİNDE TOPRAKLAMA UYGULAMALARI VE ÖLÇÜLER]
-- Uygulama başlıkları: 1. Direk tipi transformatörlerde, 2. AG Direkleri, SDK ve aydınlatma tesislerinde, 3. Yer altı (YG) kablo tesislerinde, 4. Müşterek direklerde ve ENH'larda, 5. Elektrik dağıtım tesisleri binalarında (TR Binası ve K.Ö.K), 6. İndirici ve dağıtım merkezlerinde.
-- Parafudrlar: En kısa yoldan kesintisiz olarak ayrı bir 95 mm2 örgülü çelik iletkenle topraklayıcıya bağlanır. Parafudrlar topraklama iletkenine fleksibl iletkenle irtibatlandırılacaktır.
-- Direk Tipi Trafo ve Müşterek Direk Ölçüleri (S. 262, 263, 266):
-  * Koruma topraklaması ile işletme topraklaması arası mesafe: En az 20 m.
-  * Topraklayıcı kazık boyu: 2 m. Gömülme derinliği: En az 50 cm (50-100 cm).
-  * Not: (a) mesafesi topraklayıcı boyunun iki katı olacaktır (2 m x 2 = 4 metre; kazı uzunluğu 4 metre).
-  * AG Direkleri / Müşterek direk işletme topraklaması kablosu: 1x50 mm2 NYY, direk dibinde 2,15 m boyunda gaz borusu veya PVC boru içinde korunur.
-  * Boyalı Kaynaklı ENH Demir Direğinde Koruma Topraklaması (S. 267): 50 cm derinlik, 2 m kazık, 95 mm2 örgülü galvanizli çelik iletken, (a) mesafesi topraklayıcı boyunun 2 katı.
-  * Saha Dağıtım Kutusu (SDK) ve Aydınlatma (S. 264, 265): SDK ile aydınlatma direklerinin kablosu aynı kanala döşendiği takdirde topraklama iletkeni (1x35 mm2 çıplak örgülü bakır iletken) her ikisi için birlikte kullanılır.
-  * TR Binası ve K.Ö.K (S. 268): Izgara topraklama sistemi uygulanır. Topraklama ağ şebekesi en az 50 cm toprak altına gömülecek, şebekenin kontrolü için topraklayıcı kazıklarının bulunduğu yerlere 40x40 cm rögar yapılacaktır.
-
-[SAYFA 269 - TEMEL TOPRAKLAMA VE DİKKAT EDİLECEK HUSUSLAR]
-- 12.5. Temel Topraklama: Potansiyel dengelemesinin etkisini artırır. Kuvvetli akım tesislerinde ve yıldırıma karşı koruma tesislerinde topraklayıcı olarak uygundur. Demir donatısı bulunmayan ve bulunan temelde bağlantı filizi en az 150 cm uzunluğunda bırakılır, 5 cm zemin betonu/tespit elemanı ölçüleri uygulanır.
-- 12.6. Topraklama Yapılırken Dikkat Edilecek Hususlar (8 Madde):
-  1) Havai hat şebekelerinde işletme ve koruma topraklamalarının mümkün olduğunca hat güzergâhı altına gelmemelidir.
-  2) Havai hat şebekelerinde yapılan işletme topraklamalarına ait topraklama iletkeni arıza dışında da gerilim altında olabileceğinden izole kablo olarak tesis edilmelidir.
-  3) Topraklayıcı olarak uygun elektrot kullanılması gereklidir (2 m boyunda NPL 65x65x7 mm galvanizli profil).
-  4) Elektrik tesislerinde yapılan tüm topraklamalarda, istenen toprak geçiş direnç değeri sağlanamadığı takdirde, topraklayıcı yapım şekli ve sayıları artırılarak paralel bağlanıp istenilen toprak geçiş direnci sağlanmalıdır (Elektrot sayısı artırıldığında direnç azalır).
-  5) Topraklayıcıların birbirini etkilememesi için topraklayıcılar arasındaki mesafenin elektrot uzunluğunun 2 katı olmalıdır.
-  6) 1kV 50 mm2 NYY kablo ile yapılan işletme topraklamalarında kablonun dış etkenlere karşı korunması amacıyla direk temel üstünden başlamak üzere 2 m boyunda gaz borusu veya PVC ile muhafaza altına alınmalıdır.
-  7) Topraklama şeridi veya topraklama iletkeni yüzeyden 0,5-1m derinliğe gömülmelidir.
-  8) İşletme topraklaması ile koruma topraklaması arasında en az 20 metre mesafe olmalıdır.
-
-[SAYFA 270 - TOPRAKLAMA DİRENÇ DEĞERİNİN ÖLÇÜLMESİ]
-- Ön Hazırlık: Direnç ölçümü yapılmadan önce topraklama iletkeni veya topraklama şeridi teçhizattan ayrılmalıdır.
-- 12.7.1. Toprak Direncinin Ölçülmesi:
-  * Ölçüm yapılacak toprak tesisine ait topraklama elektrotu toprak prizinden ayrılır ve cihazın E (toprak ucu) terminaline bağladığımız yeşil renkli kablo bu elektroda irtibatlandırılır.
-  * Cihazın P (gerilim ucu) terminaline bağladığımız sarı renkli kablo topraklama elektrotundan 5-10 metre ileriye çakılan 1 no.lu topraklama çubuğuna irtibatlandırılır.
-  * Cihazın C (akım ucu) terminaline bağladığımız kırmızı renkli kablo 1 no.lu topraklama çubuğundan 5-10 metre ileriye çakılan 2 no.lu topraklama çubuğuna irtibatlandırılır. Kablolar birbirine değmemeli ve birbiri üzerinden geçmemelidir.
-  * 1 ve 2 no.lu çubukların bulunduğu toprak zeminin nemli olması gerekir (taşlı, kumlu, kuru ise su dökülerek nemlendirilmelidir).
-  * Seçici komütatör önce en düşük kademeye (20 Ohm -> 200 Ohm -> 2000 Ohm) getirilerek test butonuna basılır. Yeşil ışık cihazın aktif olduğunu gösterir. Değer görülmezse bir üst kademeye alınır (kademe değiştirme test butonuna basılı iken yapılmamalıdır).
-  * Ölçüm sırasında terminaller arasında yaklaşık 50 V AC gerilim oluşacağından test çubuklarına dokunulmamalıdır. Önce toprak gerilimi (earth voltage) kademesinde ölçüm yapılır, kılavuzdaki değerden düşük ise test işlemine başlanır.
-
-[SAYFA 271 - 272 - DOKÜMANTASYON VE DENETİM PERİYOTLARI]
-- 12.8. Dokümantasyon ve Denetim Ayrıntıları: Saha uygulama ve denetleme planı bulunmalıdır (topraklayıcı yerleri, çeşitleri, boyutları, gömülme derinlikleri, özgül direnci, yayılma direnci, dokunma gerilimleri, Proje Mühendisi ve ölçmeyi yapan elektrik mühendisi bilgileri yer alır).
-- Global topraklama sistemi içerisindeki alanlarda toprak direncini veya topraklama gerilimini doğrulamaya gerek yoktur, temel tasarım yeterlidir.
-- Çeşitli Topraklama Tesislerinin İşletme Dönemi Muayene, Ölçme ve Denetleme Periyotları (Sayfa 272):
-  1) Elektrik üretim iletim ve dağıtım tesisleri (enerji nakil ve dağıtım hatları hariç) için: 2 yıl.
-  2) Enerji nakil ve dağıtım hatları için: 5 yıl.
-  3) Sanayi tesisleri ve ticaret merkezleri için:
-     a) Topraklamalara ilişkin dirençlerinin muayene ve ölçülmesi: 1 yıl.
-     b) Topraklama tesisleri ile ilgili diğer muayene, ölçme ve kontroller: 2 yıl.
-  4) Sabit olmayan tesisler için:
-     a) Sabit işletme elemanları için: 1 yıl.
-     b) Yer değiştirebilen işletme elemanları için: 6 ay.
-  5) Parlayıcı, Patlayıcı Tehlikeli ve Zararlı Maddelerle Çalışılan İşyerleri ve İşlerde Alınacak Tedbirler Hakkında Tüzük kapsamındaki topraklama tesisleri ile ıslak ortamlarda çalışılan işyerlerindeki topraklama tesislerinin muayene, ölçme ve denetleme periyotları: 1 yılı aşamaz.
-`;
-
-let stream = null;
-let facingMode = "environment";
-let isScanning = false;
-let scanTimer = null;
-let audioEnabled = true;
-let isBusy = false;
-
-const MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite"
-];
-
-window.onload = () => {
-  const savedKey = localStorage.getItem("gemini_api_key") || "";
-  document.getElementById("apiKeyInput").value = savedKey;
-  document.getElementById("intervalSelect").value = localStorage.getItem("scan_interval") || "8000";
-  document.getElementById("rateSelect").value = localStorage.getItem("speech_rate") || "1.1";
-  startCamera();
-};
-
-async function startCamera() {
-  if (stream) {
-    stream.getTracks().forEach(t => t.stop());
-  }
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false
-    });
-    const video = document.getElementById("video");
-    video.srcObject = stream;
-    setStatus("Kamera Hazır (v5.0 - Sadece Kitap S.256-272)");
-  } catch (err) {
-    setStatus("Kamera İzni Gerekli");
-    showOutput("Kamera başlatılamadı: " + err.message, true);
-  }
-}
-
-function switchCamera() {
-  facingMode = facingMode === "environment" ? "user" : "environment";
-  startCamera();
-}
-
-function toggleAudio() {
-  audioEnabled = !audioEnabled;
-  const btn = document.getElementById("audioBtn");
-  btn.textContent = audioEnabled ? "🔊 Ses Açık" : "🔇 Ses Kapalı";
-  btn.classList.toggle("muted", !audioEnabled);
-  if (!audioEnabled) window.speechSynthesis.cancel();
-}
-
-function openSettings() {
-  document.getElementById("settingsModal").classList.add("open");
-}
-
-function closeSettings() {
-  document.getElementById("settingsModal").classList.remove("open");
-}
-
-function saveSettings() {
-  const key = document.getElementById("apiKeyInput").value.trim();
-  const interval = document.getElementById("intervalSelect").value;
-  const rate = document.getElementById("rateSelect").value;
-  localStorage.setItem("gemini_api_key", key);
-  localStorage.setItem("scan_interval", interval);
-  localStorage.setItem("speech_rate", rate);
-  closeSettings();
-  if (isScanning) {
-    stopAutoScan();
-    startAutoScan();
-  }
-  showOutput("Ayarlar kaydedildi. Soruyu çerçeveye tutup 'Şimdi Oku' butonuna basın.", false);
-}
-
-function toggleAutoScan() {
-  if (isScanning) stopAutoScan();
-  else startAutoScan();
-}
-
-function startAutoScan() {
-  isScanning = true;
-  const btn = document.getElementById("scanBtn");
-  btn.textContent = "⏹ Taramayı Durdur";
-  btn.classList.add("active");
-  captureAndAnalyze();
-  const interval = parseInt(localStorage.getItem("scan_interval") || "8000", 10);
-  scanTimer = setInterval(() => {
-    if (!isBusy) captureAndAnalyze();
-  }, interval);
-}
-
-function stopAutoScan() {
-  isScanning = false;
-  clearInterval(scanTimer);
-  const btn = document.getElementById("scanBtn");
-  btn.textContent = "▶ Canlı Taramayı Başlat";
-  btn.classList.remove("active");
-  setStatus("Kamera Hazır (v5.0 - Sadece Kitap S.256-272)");
-}
-
-function setStatus(text) {
-  document.getElementById("statusPill").textContent = text;
-}
-
-function showOutput(text, isError = false) {
-  const box = document.getElementById("outputBox");
-  box.textContent = text;
-  box.classList.toggle("error", isError);
-}
-
-function speakText(text) {
-  if (!audioEnabled || !("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = "tr-TR";
-  utter.rate = parseFloat(localStorage.getItem("speech_rate") || "1.1");
-  window.speechSynthesis.speak(utter);
-}
-
-function captureFrameBase64() {
-  const video = document.getElementById("video");
-  const canvas = document.getElementById("canvas");
-  if (!video.videoWidth) return null;
-
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
-  const cropW = Math.floor(vw * 0.9);
-  const cropH = Math.floor(vh * 0.65);
-  const startX = Math.floor((vw - cropW) / 2);
-  const startY = Math.floor((vh - cropH) / 2);
-
-  canvas.width = 800;
-  canvas.height = Math.floor(800 * (cropH / cropW));
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.75).split(",")[1];
-}
-
-async function fetchWithTimeout(url, options, timeoutMs = 9000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
-    clearTimeout(id);
-    return response;
-  } catch (err) {
-    clearTimeout(id);
-    throw err;
-  }
-}
-
-async function captureAndAnalyze() {
-  if (isBusy) return;
-  const apiKey = (localStorage.getItem("gemini_api_key") || "").trim();
-  if (!apiKey) {
-    showOutput("Lütfen sağ üstteki '⚙ API' butonuna basıp Gemini API anahtarınızı girin.", true);
-    if (isScanning) stopAutoScan();
-    return;
-  }
-
-  const base64Img = captureFrameBase64();
-  if (!base64Img) {
-    showOutput("Kamera görüntüsü henüz hazır değil, lütfen bekleyin.", true);
-    return;
-  }
-
-  isBusy = true;
-  const promptText = `Sen TEDAŞ Topraklamalar sınav asistanısın. 
-ÇOK ÖNEMLİ KURAL: Sadece ve sadece aşağıda verilen 'KİTAP BİLGİ BANKASI' (Sayfa 256-272) metnindeki kesin bilgilere dayanarak cevap ver. Kendi dış bilgini, tahminini veya kitapta yazmayan hiçbir bilgiyi ASLA ekleme. Eğer kameradaki sorunun cevabı aşağıdaki kitap bilgi bankasında yoksa, sadece 'Bu sorunun cevabı yüklenen kitap sayfalarında yer almıyor.' de.
-Görüntüdeki soruyu veya soruları tespit et. Kısa, net, doğrudan sesli okumaya uygun Türkçe cevap ver (Örn: '4. sorunun cevabı D şıkkı Münferit topraklama. Çünkü...').
-
-KİTAP BİLGİ BANKASI:
-${KITAP_BILGI_BANKASI}`;
-
-  let lastError = "";
-  let succeeded = false;
-
-  for (const model of MODELS) {
-    setStatus(`Kitaptan Aranıyor (${model})... ⏳`);
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-      const res = await fetchWithTimeout(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: promptText },
-              { inline_data: { mime_type: "image/jpeg", data: base64Img } }
-            ]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 350
-          }
-        })
-      }, 9000);
-
-      const data = await res.json();
-      if (!res.ok) {
-        lastError = data?.error?.message || `HTTP ${res.status}`;
-        continue;
-      }
-
-      const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (answer && answer.trim()) {
-        showOutput(answer.trim(), false);
-        speakText(answer.trim());
-        succeeded = true;
-        break;
-      } else {
-        lastError = "Boş yanıt döndü.";
-      }
-    } catch (e) {
-      lastError = e.name === "AbortError" ? "Zaman aşımı (9 sn)" : e.message;
-    }
-  }
-
-  if (!succeeded) {
-    showOutput("Hata: " + lastError, true);
-  }
-  setStatus("Kamera Hazır (v5.0 - Sadece Kitap S.256-272)");
-  isBusy = false;
-}
-</script>
-</body>
-</html>
+[SAYFA 260-261 - ŞEBEKE TİPLERİ (TT, IT, TN)]
