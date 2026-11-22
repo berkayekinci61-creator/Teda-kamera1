@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TEDAŞ Topraklama">
+    <title>TEDAŞ Topraklamalar - Canlı Kamera & Sesli Asistan</title>
+    <link rel="manifest" id="manifest-placeholder">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+        header {
+            background-color: var(--card-bg);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            z-index: 10;
+        }
+        .header-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-icon {
+            background: #334155;
+            color: var(--text-main);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-icon.active {
+            background: var(--primary);
+        }
+        .camera-container {
+            position: relative;
+            flex: 1;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .scan-frame {
+            position: absolute;
+            width: 82%;
+            height: 45%;
+            border: 2px dashed rgba(56, 189, 248, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 10px;
+            pointer-events: none;
+        }
+        .scan-hint {
+            background: rgba(15, 23, 42, 0.8);
+            color: #e2e8f0;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .status-badge {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid #334155;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 5;
+            white-space: nowrap;
+        }
+        .bottom-panel {
+            background-color: var(--card-bg);
+            padding: 14px 16px 20px;
+            border-top: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 10;
+        }
+        .controls-row {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr auto;
+            gap: 8px;
+        }
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 12px 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .btn:active {
+            opacity: 0.8;
+        }
+        .btn-start { background-color: var(--success); }
+        .btn-stop { background-color: var(--danger); }
+        .btn-now { background-color: var(--primary); }
+        .btn-flip { background-color: #475569; padding: 12px 14px; }
+        .result-box {
+            background-color: var(--bg-dark);
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            max-height: 150px;
+            overflow-y: auto;
+            color: #e2e8f0;
+        }
+        .result-box strong {
+            color: #38bdf8;
+        }
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 50;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal {
+            background: var(--card-bg);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .modal h3 {
+            font-size: 16px;
+            color: #38bdf8;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .form-group input, .form-group select {
+            background: var(--bg-dark);
+            border: 1px solid #475569;
+            color: white;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .modal-actions button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-title">⚡ TEDAŞ Topraklamalar</div>
+    <div class="header-actions">
+        <button id="btnAudio" class="btn-icon active" onclick="toggleAudio()">🔊 Ses Açık</button>
+        <button class="btn-icon" onclick="openSettings()">⚙ API</button>
+    </div>
+</header>
+
+<div class="camera-container">
+    <div id="statusBadge" class="status-badge">Kamera Bekleniyor</div>
+    <video id="video" autoplay playsinline muted></video>
+    <div class="scan-frame">
+        <div class="scan-hint">Soruyu çerçeveye ortalayın</div>
+    </div>
+</div>
+
+<div class="bottom-panel">
+    <div class="controls-row">
+        <button id="btnToggleScan" class="btn btn-start" onclick="toggleLiveScan()">▶ Canlı Taramayı Başlat</button>
+        <button class="btn btn-now" onclick="captureAndSolve(true)">⚡ Şimdi Oku</button>
+        <button class="btn btn-flip" onclick="switchCamera()" title="Kamerayı Çevir">🔁</button>
+    </div>
+    <div id="resultBox" class="result-box">
+        <strong>Nasıl Çalışır?</strong><br>
+        1. Sağ üstten <strong>⚙ API</strong> butonuna basıp Gemini API anahtarınızı kaydedin.<br>
+        2. <strong>Canlı Taramayı Başlat</strong>'a basın. Kamera sürekli açık kalır, ekranda yeni bir soru gördüğü anda otomatik çözer ve cevabı sesli okur.
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay">
+    <div class="modal">
+        <h3>⚙ Canlı Tarama & API Ayarları</h3>
+        <div class="form-group">
+            <label for="apiKeyInput">Google Gemini API Anahtarı</label>
+            <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
+        </div>
+        <div class="form-group">
+            <label for="intervalSelect">Otomatik Tarama Aralığı (Saniye)</label>
+            <select id="intervalSelect">
+                <option value="3500">3.5 Saniye (Hızlı)</option>
+                <option value="5000" selected>5 Saniye (Dengeli - Önerilen)</option>
+                <option value="8000">8 Saniye (Kota Dostu)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="rateSelect">Konuşma Hızı</label>
+            <select id="rateSelect">
+                <option value="0.95" selected>Normal (0.95x)</option>
+                <option value="1.1">Akıcı (1.1x)</option>
+                <option value="1.25">Hızlı (1.25x)</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-start" onclick="saveSettings()">Kaydet</button>
+            <button class="btn btn-flip" onclick="closeSettings()">Kapat</button>
+        </div>
+    </div>
+</div>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+    // Dynamic PWA Manifest Generation
+    const manifestData = {
+        name: "TEDAŞ Topraklamalar - Canlı Kamera & Sesli Asistan",
+        short_name: "TEDAŞ Asistan",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#0f172a",
+        theme_color: "#0f172a",
+        icons: [
+            {
+                src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f172a'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='%2338bdf8'%3E⚡%3C/text%3E%3C/svg%3E",
+                sizes: "192x192",
+                type: "image/svg+xml"
+            },
+            {
+                src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f172a'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='%2338bdf8'%3E⚡%3C/text%3E%3C/svg%3E",
+                sizes: "512x512",
+                type: "image/svg+xml"
+            }
+        ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+    document.getElementById('manifest-placeholder').setAttribute('href', URL.createObjectURL(manifestBlob));
+
+    // App State
+    let stream = null;
+    let facingMode = 'environment';
+    let isScanning = false;
+    let scanTimer = null;
+    let isBusy = false;
+    let audioEnabled = true;
+    let lastQuestionHash = "";
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const statusBadge = document.getElementById('statusBadge');
+    const resultBox = document.getElementById('resultBox');
+
+    // Load Saved Settings
+    function loadSettings() {
+        const key = localStorage.getItem('tedas_gemini_key') || '';
+        const interval = localStorage.getItem('tedas_scan_interval') || '5000';
+        const rate = localStorage.getItem('tedas_speech_rate') || '0.95';
+        document.getElementById('apiKeyInput').value = key;
+        document.getElementById('intervalSelect').value = interval;
+        document.getElementById('rateSelect').value = rate;
+    }
+
+    function openSettings() {
+        loadSettings();
+        document.getElementById('settingsModal').classList.add('open');
+    }
+
+    function closeSettings() {
+        document.getElementById('settingsModal').classList.remove('open');
+    }
+
+    function saveSettings() {
+        const key = document.getElementById('apiKeyInput').value.trim();
+        const interval = document.getElementById('intervalSelect').value;
+        const rate = document.getElementById('rateSelect').value;
+        localStorage.setItem('tedas_gemini_key', key);
+        localStorage.setItem('tedas_scan_interval', interval);
+        localStorage.setItem('tedas_speech_rate', rate);
+        closeSettings();
+        setStatus("Ayarlar Kaydedildi ✅");
+        if (isScanning) {
+            stopLiveScan();
+            startLiveScan();
+        }
+    }
+
+    function setStatus(text) {
+        statusBadge.textContent = text;
+    }
+
+    function toggleAudio() {
+        audioEnabled = !audioEnabled;
+        const btn = document.getElementById('btnAudio');
+        if (audioEnabled) {
+            btn.textContent = "🔊 Ses Açık";
+            btn.classList.add('active');
+        } else {
+            btn.textContent = "🔇 Ses Kapalı";
+            btn.classList.remove('active');
+            window.speechSynthesis.cancel();
+        }
+    }
+
+    function speak(text) {
+        if (!audioEnabled || !('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'tr-TR';
+        utterance.rate = parseFloat(localStorage.getItem('tedas_speech_rate') || '0.95');
+        window.speechSynthesis.speak(utterance);
+    }
+
+    async function initCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
+            video.srcObject = stream;
+            setStatus("Kamera Hazır");
+        } catch (err) {
+            setStatus("Kamera İzni Gerekli ❌");
+            resultBox.innerHTML = "<strong>Hata:</strong> Kameraya erişilemedi. Lütfen tarayıcı izinlerini kontrol edin ve sayfayı HTTPS üzerinden açın.";
+        }
+    }
+
+    function switchCamera() {
+        facingMode = facingMode === 'environment' ? 'user' : 'environment';
+        initCamera();
+    }
+
+    function toggleLiveScan() {
+        if (isScanning) {
+            stopLiveScan();
+        } else {
+            startLiveScan();
+        }
+    }
+
+    function startLiveScan() {
+        const apiKey = localStorage.getItem('tedas_gemini_key');
+        if (!apiKey) {
+            openSettings();
+            alert("Lütfen önce Google Gemini API anahtarınızı girin.");
+            return;
+        }
+        isScanning = true;
+        const btn = document.getElementById('btnToggleScan');
+        btn.textContent = "⏹ Taramayı Durdur";
+        btn.className = "btn btn-stop";
+        setStatus("Canlı Tarama Aktif...");
+        const interval = parseInt(localStorage.getItem('tedas_scan_interval') || '5000', 10);
+        captureAndSolve(false);
+        scanTimer = setInterval(() => captureAndSolve(false), interval);
+    }
+
+    function stopLiveScan() {
+        isScanning = false;
+        clearInterval(scanTimer);
+        const btn = document.getElementById('btnToggleScan');
+        btn.textContent = "▶ Canlı Taramayı Başlat";
+        btn.className = "btn btn-start";
+        setStatus("Tarama Durduruldu");
+        window.speechSynthesis.cancel();
+    }
+
+    async function captureAndSolve(force = false) {
+        if (isBusy) return;
+        const apiKey = localStorage.getItem('tedas_gemini_key');
+        if (!apiKey) {
+            openSettings();
+            return;
+        }
+        if (!video.videoWidth) return;
+
+        isBusy = true;
+        setStatus("Görüntü Analiz Ediliyor...");
+
+        // Crop center scan frame
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        const cropW = vw * 0.85;
+        const cropH = vh * 0.50;
+        const cropX = (vw - cropW) / 2;
+        const cropY = (vh - cropH) / 2;
+
+        canvas.width = cropW;
+        canvas.height = cropH;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+        const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+
+        const prompt = `Sen TEDAŞ Topraklamalar ve elektrik tesisleri yönetmeliği konusunda uzman bir sesli asistansın. 
+Görüntüdeki soruyu oku. Eğer görüntüde net bir soru veya test maddesi yoksa sadece "SORU_YOK" yaz.
+Eğer bir soru varsa:
+1. Sorunun çok kısa özetini veya anahtar kelimesini yaz.
+2. Doğru şıkkı ve cevabı net biçimde söyle.
+3. Çok kısa (1-2 cümlelik) teknik açıklamasını ekle.
+Cevabı sesli okunmaya uygun, doğal ve akıcı Türkçe ile ver.`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: prompt },
+                            { inline_data: { mime_type: "image/jpeg", data: base64Image } }
+                        ]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error.message);
+            }
+
+            const answerText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+
+            if (answerText.includes("SORU_YOK") || !answerText) {
+                setStatus(isScanning ? "Soru Aranıyor..." : "Soru Bulunamadı");
+                if (force) {
+                    resultBox.innerHTML = "<strong>Uyarı:</strong> Çerçeve içinde okunabilir bir soru tespit edilemedi.";
+                }
+            } else {
+                const simpleHash = answerText.slice(0, 40);
+                if (force || simpleHash !== lastQuestionHash) {
+                    lastQuestionHash = simpleHash;
+                    resultBox.innerHTML = answerText.replace(/\n/g, '<br>');
+                    setStatus("Cevaplandı ✅");
+                    speak(answerText.replace(/[*#]/g, ''));
+                } else {
+                    setStatus("Aynı Soru (Bekleniyor)...");
+                }
+            }
+        } catch (err) {
+            setStatus("API Hatası ❌");
+            resultBox.innerHTML = `<strong>Hata:</strong> ${err.message}`;
+        } finally {
+            isBusy = false;
+        }
+    }
+
+    // Start camera on load
+    window.addEventListener('load', initCamera);
+</script>
+</body>
+</html>
